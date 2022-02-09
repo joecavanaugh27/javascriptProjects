@@ -1,0 +1,10 @@
+A playable battleship game. 
+
+To see the game run input this when the game asks for ship spread if you do not want to set it yourself.
+A(A1-A5);B(B6-E6);S(H3-J3);
+
+
+
+
+
+

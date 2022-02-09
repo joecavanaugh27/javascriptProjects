@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>BattleShip</title>
+<style>
+	table,
+	th,
+	td {
+		padding: 10px;
+		border: 1px solid black;
+		border-collapse: collapse;
+    }
+	  
+	#overlay {
+		position: fixed;
+		display: none;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0,0,0,1);
+		z-index: 2;
+		cursor: pointer;
+	}
+	
+	#overlayText{
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		font-size: 50px;
+		color: white;
+		transform: translate(-50%,-50%);
+		-ms-transform: translate(-50%,-50%);
+	}
+	
+	#overlay2 {
+		position: fixed;
+		display: none;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0,0,0,0.25);
+		z-index: 3;
+		cursor: pointer;
+	}
+	
+	#overlayText2 {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		font-size: 20px;
+		color: black;
+		transform: translate(-50%,-50%);
+		-ms-transform: translate(-50%,-50%);
+	}
+	
+	#overlay3 {
+		position: fixed;
+		display: none;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0,0,0,0.25);
+		z-index: 3;
+		cursor: pointer;
+	}
+	
+	#overlayText3 {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		font-size: 20px;
+		color: black;
+		transform: translate(-50%,-50%);
+		-ms-transform: translate(-50%,-50%);
+	}
+	
+	
+	#overlay4 {
+		position: fixed;
+		display: none;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0,0,0,1);
+		z-index: 3;
+		cursor: pointer;
+	}
+	
+	#overlayText4 {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		font-size: 20px;
+		color: white;
+		transform: translate(-50%,-50%);
+		-ms-transform: translate(-50%,-50%);
+	}
+	
+	#enemyTable{
+		background-color: cyan;
+	}
+	
+	#friendlyTable{
+		background-color: cyan;
+	}
+</style>
+<script type="text/javascript">
+	var data = 0;
+	var player1Name = "";
+	var player1Input = "";
+	var player2Name = "";
+	var player2Input = "";
+	var turn = 1;
+    function setup() {
+        const butt = document.getElementById("theButton");
+        butt.addEventListener("click", getData, false);
+    }
+    function getData() {
+        var input = document.getElementById("theText");
+		text = '';
+		text += input.value;
+		
+		if (data == 0) //first prompt for name
+		{
+			if (!Boolean(text))
+			{
+				var e = document.getElementById("message");
+				e.innerHTML = "Player name needs to be at least 1 character long.  Enter Player 1's name";
+			}
+			else {
+				player1Name = text;
+				console.log(player1Name)
+				data = 1;
+				input.value = "";
+				var e = document.getElementById("message");
+				e.innerHTML = "Enter player 1's ship distribution in the form of A(CharacterNumber-CharacterNumber);B(CharacterNumber-CharacterNumber);S(CharacterNumber-CharacterNumber);  An example of this form is A(A1-A5);B(B6-E6);S(H3-J3);";
+			}
+		}
+		else if (data == 1) //prompt for first ship placement
+		{
+			if (!Boolean(text))
+			{
+				var e = document.getElementById("message");
+				e.innerHTML = "No input detected, make sure input matches the regExp form /^A\([A-J][0-9]+-[A-J][0-9]+\);B\([A-J][0-9]+-[A-J][0-9]+\);S\([A-J][0-9]+-[A-J][0-9]+\);$/i;";
+			}
+			else {
+				player1Input = text;
+				console.log(player1Input)
+				data = 2;
+				input.value = "";
+				var e = document.getElementById("message");
+				e.innerHTML = "Enter player 2's name";
+			}
+		}
+		else if (data == 2) //prompt for second name
+		{
+			if (!Boolean(text))
+			{
+				var e = document.getElementById("message");
+				e.innerHTML = "Player name needs to be at least 1 character long.  Enter Player 2's name";
+			}
+			else {
+				player2Name = text;
+				console.log(player2Name)
+				data = 3;
+				input.value = "";
+				var e = document.getElementById("message");
+				e.innerHTML = "Enter player 2's ship distribution in the form of A(CharacterNumber-CharacterNumber);B(CharacterNumber-CharacterNumber);S(CharacterNumber-CharacterNumber);  An example of this form is A(A1-A5);B(B6-E6);S(H3-J3);";
+			}
+		}
+		else if (data == 3) //prompt for second ship placement
+		{
+			if (!Boolean(text))
+			{
+				var e = document.getElementById("message");
+				e.innerHTML = "No input detected, make sure input matches the regExp form /^A\([A-J][0-9]+-[A-J][0-9]+\);B\([A-J][0-9]+-[A-J][0-9]+\);S\([A-J][0-9]+-[A-J][0-9]+\);$/i;";
+			}
+			else {
+				player2Input = text;
+				console.log(player2Input)
+				data = 4;
+				input.value = "";
+				var e = document.getElementById("message");
+				e.remove();
+				e = document.getElementById("theButton");
+				e.remove();
+				e = document.getElementById("theText");
+				e.remove();
+				startGame();
+			}
+		}
+	}
+	
+	//make overlay to start game
+	function initializeTurn(player1,player2)
+	{
+		var ovText = document.getElementById("overlayText");
+		ovText.innerHTML = player1.name + "'s turn";
+		on();
+	}
+	
+	//create overlay to switch turns
+	function switchTurns(player1, player2)
+	{
+		if (turn == 1)
+		{
+			var friendlyTableName = document.getElementById("shipText");
+			friendlyTableName.innerHTML = player1.name + "'s Ships";
+			var enemyTableName = document.getElementById("targetText");
+			enemyTableName.innerHTML = player1.name + "'s Targets";
+			var ovText = document.getElementById("overlayText");
+			ovText.innerHTML = player1.name + "'s turn";
+			on();
+			displayShips(player1, player2);
+			displayHitsMisses(player1,player2);
+		}
+		else if (turn == 2)
+		{
+			var friendlyTableName = document.getElementById("shipText");
+			friendlyTableName.innerHTML = player2.name + "'s Ships";
+			var enemyTableName = document.getElementById("targetText");
+			enemyTableName.innerHTML = player2.name + "'s Targets";
+			var ovText = document.getElementById("overlayText");
+			ovText.innerHTML = player2.name + "'s turn";
+			on();
+			displayShips(player1, player2);
+			displayHitsMisses(player2,player1);
+		}	
+		
+	}
+	
+	//these functions handle the overlays for the program
+	function on()
+	{
+		document.getElementById("overlay").style.display = "block";
+	}
+	
+	function on2(player1, player2)
+	{
+		document.getElementById("overlay2").style.display = "block";
+		var overlay = document.getElementById("overlay2");
+		overlay.onclick = function() {test(player1, player2);};
+	}
+	
+	function on3()
+	{
+		document.getElementById("overlay3").style.display = "block";
+	}
+	
+	function on4()
+	{
+		document.getElementById("overlay4").style.display = "block";
+	}
+	
+	function test(player1, player2)
+	{
+		off2();
+		switchTurns(player1, player2);
+	}
+	
+	function off()
+	{
+		document.getElementById("overlay").style.display = "none";
+	}
+	
+	function off2()
+	{
+		document.getElementById("overlay2").style.display = "none";
+	}
+	
+	function off3()
+	{
+		document.getElementById("overlay3").style.display = "none";
+	}
+	
+
+	//function handles start of game
+	function startGame() {
+		var player1 = new Player(player1Name, player1Input);
+		var player2 = new Player(player2Name,player2Input);
+		initializeTurn(player1, player2);
+		createTable(player1, player2);
+	}
+	
+	//preserves backgrounds of table cells
+	function displayHitsMisses(activePlayer, targetPlayer) 
+	{	
+		for (var i = 1; i < 11; i++) {	
+			for (var j = 1; j < 11; j++) {	
+				if (activePlayer.hitMiss[i][j] == "miss")
+				{
+					var convertCol = String.fromCharCode(j+64);
+					var id = "t"+convertCol+i;
+					var cell = document.getElementById(id);
+					cell.style.backgroundColor = "white";
+				}
+				else if (activePlayer.hitMiss[i][j] == "hit")
+				{
+					var convertCol = String.fromCharCode(j+64);
+					var id = "t"+convertCol+i;
+					var cell = document.getElementById(id);
+					cell.style.backgroundColor = "red";
+				}
+				else
+				{
+					var convertCol = String.fromCharCode(j+64);
+					var id = "t"+convertCol+i;
+					var cell = document.getElementById(id);
+					cell.style.backgroundColor = "cyan";
+				}
+			}
+		}
+		
+		for (var i = 1; i < 11; i++) {	
+			for (var j = 1; j < 11; j++) {	
+				if (targetPlayer.hitMiss[i][j] == "miss")
+				{
+					var convertCol = String.fromCharCode(j+64);
+					var id = "f"+convertCol+i;
+					var cell = document.getElementById(id);
+					cell.style.backgroundColor = "white";
+				}
+				else if (targetPlayer.hitMiss[i][j] == "hit")
+				{
+					var convertCol = String.fromCharCode(j+64);
+					var id = "f"+convertCol+i;
+					var cell = document.getElementById(id);
+					cell.style.backgroundColor = "red";
+				}
+				else
+				{
+					var convertCol = String.fromCharCode(j+64);
+					var id = "f"+convertCol+i;
+					var cell = document.getElementById(id);
+					cell.style.backgroundColor = "cyan";
+				}
+			}
+		}
+		
+	}
+	
+	//interperets player input of ships
+	function decipherShips(player)
+	{
+	
+		//A(A6-A10);B(B6-E6);S(H3-J3);
+		const userKeyRegExp = /^A\([A-J][0-9]+-[A-J][0-9]+\);B\([A-J][0-9]+-[A-J][0-9]+\);S\([A-J][0-9]+-[A-J][0-9]+\);$/i;
+		var valid1 = userKeyRegExp.test(player.input);
+		if (valid1 == false)
+		{
+			var ovText = document.getElementById("overlayText4");
+			ovText.innerHTML = "One or more ship placements was invalid, refresh the page to play again"
+			on4();
+		}
+		//console.log(valid1);
+		var rowBased = false;
+		var colBased = false;
+		var ship = 0;
+		
+		var hitMisses = [[],[],[],[],[],[],[],[],[],[],[]];
+		for (var i = 0; i < 11; i++) {	
+			for (var j = 0; j < 11; j++) {
+				hitMisses[i][j] = " ";
+			}
+		}
+		player.hitMiss = hitMisses;
+		
+		var ships = [[],[],[],[],[],[],[],[],[],[],[]];
+		for (var i = 0; i < 11; i++) {	
+			for (var j = 0; j < 11; j++) {
+				ships[i][j] = " ";
+			}
+		}
+		
+		if (valid1 == true)// && valid2 == true)
+		{
+			var fullString = player.input;
+			for (var i = 2; i < fullString.length; i+=9)
+			{	
+				var check = false
+				while (!check)
+				{
+					letterCheck = fullString.slice(i,i+1);
+					check = isCharacterALetter(letterCheck);
+					if (check == true)
+					{
+						break;
+					}
+					i+=1;
+				}
+						
+				var Letter = fullString.slice(i,i+1);
+				
+				var Number = fullString.slice(i+1,i+2);
+				var numCheck = fullString.slice(i+2,i+3);
+				check = is_numeric(numCheck);
+				if (check == true)
+				{
+					Number = fullString.slice(i+1,i+3);
+				}
+				
+				
+				check = false
+				while (!check)
+				{
+					letterCheck = fullString.slice(i+3,i+4);
+					check = isCharacterALetter(letterCheck);
+					if (check == true)
+					{
+						break;
+					}
+					i+=1;
+				}
+				
+				var Letter2 = fullString.slice(i+3,i+4);
+				var Number2 = fullString.slice(i+4,i+5);
+				
+				if (Letter == Letter2)
+				{
+					colBased = true;
+					if (ship == 0)
+					{
+						for (var j = 0; j <5 ; j++)
+						{
+							var cellidNum = parseInt(j) + parseInt(Number);
+							var cellidLetterNum = Letter.charCodeAt(0) - 64;
+							ships[cellidNum][cellidLetterNum] = "A";
+						}
+					}
+					if (ship == 1)
+					{
+						for (var j = 0; j <4 ; j++)
+						{
+							var cellidNum = parseInt(j) + parseInt(Number);
+							var cellidLetterNum = Letter.charCodeAt(0) - 64;
+							ships[cellidNum][cellidLetterNum] = "B";
+						}
+					}
+					if (ship == 2)
+					{
+						for (var j = 0; j <3 ; j++)
+						{
+							var cellidNum = parseInt(j) + parseInt(Number);
+							var cellidLetterNum = Letter.charCodeAt(0) - 64;
+							ships[cellidNum][cellidLetterNum] = "S";
+						}
+					}
+				}
+				else if (Letter != Letter2)
+				{
+					rowBased = true;
+					if (ship == 0)
+					{
+						for (var j = 0; j <5 ; j++)
+						{
+							var cellidAscii = Letter.charCodeAt(0) - 64 + parseInt(j);
+							ships[Number][cellidAscii] = "A";
+						}
+						
+					}
+					if (ship == 1)
+					{
+						for (var j = 0; j <4 ; j++)
+						{
+							var cellidAscii = Letter.charCodeAt(0) - 64 + parseInt(j);
+							ships[Number][cellidAscii] = "B";
+						}
+						
+					}
+					if (ship == 2)
+					{
+						for (var j = 0; j <3 ; j++)
+						{
+							var cellidAscii = Letter.charCodeAt(0) - 64 + parseInt(j);
+							ships[Number][cellidAscii] = "S";
+						}
+						
+					}
+				}	
+				else {
+					console.log("neither");
+				}
+				ship += 1;
+			}
+			player.ships = ships;
+		}
+		
+	}
+	
+	//simple helper function 
+	function isCharacterALetter(char) {
+		return (/[a-zA-Z]/).test(char)
+	}	
+	
+	//another helper funciton
+	function is_numeric(str){
+		return /^\d+$/.test(str);
+	}
+	
+	//Creates main tables and initializes game
+	function createTable(player1, player2) {
+		var body = document.body;
+		var enemyTableName = document.createElement("div");
+		enemyTableName.setAttribute("id", "targetText");
+		enemyTableName.innerHTML = player1.name + "'s Targets";
+		body.appendChild(enemyTableName);
+	
+		var enTable = document.createElement("table");
+		enTable.setAttribute("id", "enemyTable");
+		
+		var rows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+		var cols = ['','A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+		
+		var enTableBody = document.createElement("tbody");
+		
+		for (var i = 0; i < rows.length; i++) {
+		
+			var row = document.createElement("tr");
+			row.setAttribute("id", rows[i]);
+			
+			for (var j = 0; j < cols.length; j++) {
+				var cell = document.createElement("td");
+				cell.setAttribute("id", "t"+cols[j]+rows[i]);
+				
+				if (i == 0 && j == 0) {
+					var cellContent = document.createTextNode(cols[j]);
+				}
+				else if (i == 0 && j > 0) {
+					var cellContent = document.createTextNode(cols[j]);
+				}
+				else if (j == 0 && i > 0) {
+					var cellContent = document.createTextNode(rows[i]);
+				}
+				else {
+					var cellContent = document.createTextNode(" ");
+					cell.addEventListener("click", function() {gameplay(player1, player2, this.id); });
+				}
+
+				cell.appendChild(cellContent);
+				row.appendChild(cell);
+
+				// add the row to the end of the table body
+				enTableBody.appendChild(row);
+				
+			}
+		}
+		enTable.appendChild(enTableBody);
+		body.appendChild(enTable);
+		
+		
+		/////////////////////////////////////////
+		
+		var friendlyTableName = document.createElement("div"); 
+		friendlyTableName.setAttribute("id", "shipText");
+		friendlyTableName.innerHTML = player1.name + "'s Ships";
+		body.appendChild(friendlyTableName);
+	
+		var frTable = document.createElement("table");
+		frTable.setAttribute("id", "friendlyTable");
+		
+		var frTableBody = document.createElement("tbody");
+		
+		for (var i = 0; i < rows.length; i++) {
+		
+			var row = document.createElement("tr");
+			row.setAttribute("id", rows[i]);
+			
+			for (var j = 0; j < cols.length; j++) {
+				var cell = document.createElement("td");
+				cell.setAttribute("id", "f"+cols[j]+rows[i]);
+				
+				if (i == 0 && j == 0) {
+					var cellContent = document.createTextNode(cols[j]);
+				}
+				else if (i == 0 && j > 0) {
+					var cellContent = document.createTextNode(cols[j]);
+				}
+				else if (j == 0 && i > 0) {
+					var cellContent = document.createTextNode(rows[i]);
+				}
+				else {
+					var cellContent = document.createTextNode(" ");
+				}
+
+				cell.appendChild(cellContent);
+				row.appendChild(cell);
+
+				// add the row to the end of the table body
+				frTableBody.appendChild(row);
+				
+			}
+		}
+		frTable.appendChild(frTableBody);
+		body.appendChild(frTable);
+		
+		decipherShips(player1);
+		decipherShips(player2);
+		displayShips(player1, player2);
+	}
+	
+	//displays ship placement on current players side
+	function displayShips(player1, player2)
+	{
+		var activePlayer;
+		if (turn === 1)
+		{
+			activePlayer = player1;
+		} 
+		else if (turn === 2) 
+		{
+			activePlayer = player2;
+		}
+		
+		for (var i = 0; i < 10; i++)
+		{
+			for (var j = 0; j < 10; j++)
+			{
+				var cellLetter = String.fromCharCode(j+65);
+				try{
+					var cell = document.getElementById("f"+cellLetter+(i+1));
+					cell.childNodes[0].textContent = activePlayer.ships[i+1][j+1];
+				}
+				catch {
+					break;
+				}
+			}
+		}
+	}
+	
+	
+	//handles the click of a cell
+	function gameplay(player1, player2, id)
+	{
+		//A(A6-A10);B(B6-E6);S(H3-J3);  A(A1-E1);B(F10-I10);S(J8-J10);
+		var row = id.slice(2,4);
+		var colLetter = id.slice(1,2);
+		var col = colLetter.charCodeAt(0)-64;
+		var activePlayer;
+		var targetPlayer;
+		var turnNext = 0;
+		if (turn == 1)
+		{
+			activePlayer = player1;
+			targetPlayer = player2;
+			turnNext = 2;
+		}
+		else if (turn == 2)
+		{
+			activePlayer = player2;
+			targetPlayer = player1;
+			turnNext = 1;
+		}
+		
+		//need to store hits and misses
+		var contentsOfSelectedCell = targetPlayer.ships[row][col];
+		if (contentsOfSelectedCell == "A")
+		{
+			var cell = document.getElementById(id);
+			if (cell.style.backgroundColor == "red")
+			{
+				var ovText = document.getElementById("overlayText3");
+				ovText.innerHTML = "You already chose this cell, try again";
+				on3();
+				return;
+			}
+			else{
+				cell.style.backgroundColor = "red";
+				targetPlayer.a += 1;
+				var ovText = document.getElementById("overlayText2");
+				ovText.innerHTML = "Hit";
+				activePlayer.hitMiss[row][col] = "hit";
+				turn = turnNext;
+				if (targetPlayer.a == 5)
+				{	
+					ovText.innerHTML = "Hit, You sunk " + targetPlayer.name + "'s aircraft Carrier";
+					targetPlayer.defeated+=1;
+				}	
+				on2(player1,player2);
+			}
+		}
+		else if (contentsOfSelectedCell == "B")
+		{
+			var cell = document.getElementById(id);
+			if (cell.style.backgroundColor == "red")
+			{
+				var ovText = document.getElementById("overlayText3");
+				ovText.innerHTML = "You already chose this cell, try again";
+				on3();
+				return;
+			}
+			else{
+				cell.style.backgroundColor = "red";
+				targetPlayer.b += 1;
+				var ovText = document.getElementById("overlayText2");
+				ovText.innerHTML = "Hit";
+				activePlayer.hitMiss[row][col] = "hit";
+				turn = turnNext;
+				if (targetPlayer.b == 4)
+				{	
+					ovText.innerHTML = "Hit, You sunk " + targetPlayer.name + "'s battleShip";
+					targetPlayer.defeated+=1;
+				}	
+				on2(player1,player2);
+			}
+		}
+		else if (contentsOfSelectedCell == "S")
+		{
+			var cell = document.getElementById(id);
+			if (cell.style.backgroundColor == "red")
+			{
+				var ovText = document.getElementById("overlayText3");
+				ovText.innerHTML = "You already chose this cell, try again";
+				on3();
+				return;
+			}
+			else{
+				cell.style.backgroundColor = "red";
+				targetPlayer.s += 1;
+				var ovText = document.getElementById("overlayText2");
+				ovText.innerHTML = "Hit";
+				activePlayer.hitMiss[row][col] = "hit";
+				turn = turnNext;
+				if (targetPlayer.s == 3)
+				{	
+					ovText.innerHTML = "Hit, You sunk " + targetPlayer.name + "'s submarine";
+					targetPlayer.defeated+=1;
+				}	
+				on2(player1,player2);
+			}
+		}
+		else {
+			var cell = document.getElementById(id);
+			if (cell.style.backgroundColor == "white")
+			{
+				var ovText = document.getElementById("overlayText3");
+				ovText.innerHTML = "You already chose this cell, try again";
+				on3();
+				return;
+			}
+			else{
+				cell.style.backgroundColor = "white";
+				var ovText = document.getElementById("overlayText2");
+				ovText.innerHTML = "miss";
+				activePlayer.hitMiss[row][col] = "miss";
+				turn = turnNext;
+				on2(player1,player2);
+			}				
+		}
+		
+		if (targetPlayer.defeated == 3)
+		{
+			endGame(activePlayer, targetPlayer);
+		}
+	}
+	
+	//creates overlay stating winner and scores
+	function endGame(winner, loser)
+	{
+		var scoreSub = (winner.a*2);
+		scoreSub += (winner.b*2);
+		scoreSub += (winner.s*2);
+		score = 24- scoreSub;
+		
+		var ovText = document.getElementById("overlayText4");
+		ovText.innerHTML = winner.name + " won the game with a score of " + score + ".  " + loser.name + " lost all of their ships and had a score of 0"; 
+		on4();
+	}
+	
+	//player object to store data
+	function Player(name, input) {
+		this.name = name;
+		this.input = input;
+		this.ships;
+		this.hitMiss;
+		this.a = 0;
+		this.b = 0;
+		this.s = 0;
+		this.defeated = 0;
+	}
+	
+	
+    window.addEventListener("load", setup);
+</script>
+</head>
+<body>
+	<div id="overlay" onclick="off()">
+	  <div id="overlayText">Overlay Text</div>
+	</div>
+	<div id="overlay2">
+	  <div id="overlayText2">Overlay Text</div>
+	</div>
+	<div id="overlay3" onclick="off3()">
+	  <div id="overlayText3">Overlay Text</div>
+	</div>
+	<div id="overlay4">
+	  <div id="overlayText4">Overlay Text</div>
+	</div>
+	<div id="message" >Enter player 1's name</div>
+    <div><input type="text" id="theText" name="theText"></div>
+    <div><input type="button" id="theButton" name="theButton" value="Submit"></div>
+</body>
+</html>
